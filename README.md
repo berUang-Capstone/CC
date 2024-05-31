@@ -1,8 +1,8 @@
 copas firebase confignya di DM wkwkwk
 
-npm i
+1.npm i
 
-npm start run
+2.npm start run
  
 test register
 "http://localhost:3000/register"
