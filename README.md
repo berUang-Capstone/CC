@@ -5,7 +5,7 @@ copas firebase confignya di DM wkwkwk
 2.npm start run
  
 test register
-"http://localhost:3000/register"
+"http://localhost:3000/register
 {
   "email": "example@example.com",
   "password": "password123",
@@ -13,7 +13,7 @@ test register
 }
 
 test login
-"http://localhost:3000/login
+http://localhost:3000/login
 {
   "email": "eexample@example.com",
   "password": "password123"
