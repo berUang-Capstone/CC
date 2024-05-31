@@ -21,6 +21,6 @@ http://localhost:3000/login
 
 test logout
 http://localhost:3000/logout
-Authorization > type = Bearer Token > copas token dari terminal vscode > send
+Authorization > type = Bearer Token > copas accessToken > send
 
 pasang nodemon (optinal)
