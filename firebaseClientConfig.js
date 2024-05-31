@@ -21,3 +21,4 @@ const firebaseApp = initializeApp(firebaseConfig);
 const firebaseAuth = getAuth(firebaseApp);
 
 module.exports = { firebaseApp, firebaseAuth };
+x
