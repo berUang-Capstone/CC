@@ -23,4 +23,4 @@ test logout
 http://localhost:3000/logout
 Authorization > type = Bearer Token > copas accessToken > send
 
-pasang nodemon (optinal)
+pasang nodemon (optional)
