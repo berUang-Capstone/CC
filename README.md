@@ -1,4 +1,4 @@
-copas firebase confignya di DM wkwkwk
+copas firebase confignya & service accoutnya di DM wkwkwk
 
 1.npm i
 
