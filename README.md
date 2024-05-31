@@ -3,9 +3,7 @@ copas firebase confignya di DM wkwkwk
 npm i
 
 npm start run
-
-Blom pasang nodemon 
-
+ 
 test register
 "http://localhost:3000/register"
 {
@@ -24,3 +22,5 @@ test login
 test logout
 http://localhost:3000/logout
 Authorization > type = Bearer Token > copas token dari terminal vscode > send
+
+pasang nodemon (optinal)
