@@ -9,17 +9,17 @@ const port = 3000;
 
 app.use(bodyParser.json());
 
-// Registration endpoint
+// Endpoint untuk registrasi
 app.post('/register', async (req, res) => {
     const { email, password, displayName } = req.body;
     console.log(email, password, displayName);
 
     try {
-        // Create user with Firebase Authentication
+        // Membuat pengguna baru dengan Firebase Authentication
         const userCredential = await createUserWithEmailAndPassword(firebaseAuth, email, password);
         const userRecord = userCredential.user;
 
-        // Add user data to Firestore
+        // Menambahkan data pengguna ke Firestore
         await db.collection('users').doc(userRecord.uid).set({
             email,
             displayName
@@ -27,17 +27,17 @@ app.post('/register', async (req, res) => {
 
         res.status(201).send({ message: 'User registered successfully', user: userRecord });
     } catch (error) {
-        console.error(error);  // Log the error for debugging
+        console.error(error);  // Log error untuk debugging
         res.status(400).send({ message: 'Error registering user', error: error.message });
     }
 });
 
-// Login endpoint
+// Endpoint untuk login
 app.post('/login', async (req, res) => {
     const { email, password } = req.body;
 
     try {
-        // Sign in user with Firebase Authentication
+        // Masuk pengguna dengan Firebase Authentication
         const userCredential = await signInWithEmailAndPassword(firebaseAuth, email, password);
         const user = userCredential.user;
         const token = await user.getIdToken();
@@ -46,12 +46,12 @@ app.post('/login', async (req, res) => {
 
         res.status(200).send({ message: 'User logged in successfully', user: user });
     } catch (error) {
-        console.error(error);  // Log the error for debugging
+        console.error(error);  // Log error untuk debugging
         res.status(400).send({ message: 'Error logging in user', error: error.message });
     }
 });
 
-// Logout endpoint
+// Endpoint untuk logout
 app.post('/logout', async (req, res) => {
     const authHeader = req.headers.authorization;
 
@@ -62,16 +62,16 @@ app.post('/logout', async (req, res) => {
     const token = authHeader.split(' ')[1];
 
     try {
-        // Verify the ID token to get the user's UID
+        // Verifikasi token ID untuk mendapatkan UID pengguna
         const decodedToken = await admin.auth().verifyIdToken(token);
         const uid = decodedToken.uid;
 
-        // Revoke refresh tokens for the user
+        // Mencabut refresh token untuk pengguna
         await admin.auth().revokeRefreshTokens(uid);
 
         res.status(200).send({ message: 'User logged out successfully' });
     } catch (error) {
-        console.error(error);  // Log the error for debugging
+        console.error(error);  // Log error untuk debugging
         res.status(400).send({ message: 'Error logging out user', error: error.message });
     }
 });
