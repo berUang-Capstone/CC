@@ -5,7 +5,7 @@ copas firebase confignya & service accoutnya di DM wkwkwk
 2.npm start run
  
 test register
-"http://localhost:3000/register
+"http://localhost:3000/auth/register
 {
   "email": "example@example.com",
   "password": "password123",
@@ -13,14 +13,14 @@ test register
 }
 
 test login
-http://localhost:3000/login
+http://localhost:3000/auth/login
 {
   "email": "eexample@example.com",
   "password": "password123"
 }
 
 test logout
-http://localhost:3000/logout
+http://localhost:3000/auth/logout
 Authorization > type = Bearer Token > copas accessToken > send
 
 pasang nodemon (optional)
