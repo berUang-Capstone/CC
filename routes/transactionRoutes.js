@@ -1,20 +1,22 @@
-const express = require('express')
-const { verifyToken } = require('../middleware/authMiddleware')
+const express = require('express');
+const { verifyToken } = require('../middleware/authMiddleware');
 
 const {
   getAllTransaction,
   getSingleTransaction,
   createNewTransaction,
   editTransaction,
-  deleteTransaction
-} = require('../controllers/transactionControllers')
+  deleteTransaction,
+  getTransactionsByWeek
+} = require('../controllers/transactionControllers');
 
-const router = express.Router()
+const router = express.Router();
 
-router.get('/', verifyToken, getAllTransaction)
-router.get('/single', verifyToken, getSingleTransaction)
-router.post('/', verifyToken, createNewTransaction)
-router.put('/edit', verifyToken, editTransaction)
-router.delete('/delete', verifyToken, deleteTransaction)
+router.get('/', verifyToken, getAllTransaction);
+router.get('/single', verifyToken, getSingleTransaction);
+router.post('/', verifyToken, createNewTransaction);
+router.put('/edit', verifyToken, editTransaction);
+router.delete('/delete', verifyToken, deleteTransaction);
+router.post('/week', verifyToken, getTransactionsByWeek);
 
-module.exports = router
+module.exports = router;
