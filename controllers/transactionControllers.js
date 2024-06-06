@@ -1,12 +1,11 @@
 const { db } = require('../firebase/firebaseConfig');
 
-
 const getAllTransaction = async (req, res) => {
     try {
         const snapshot = await db.collection('transactions').where('userId', '==', req.user.uid).get();
         const transactions = [];
         snapshot.forEach(doc => {
-            transactions.push({ id: doc.id, ...doc.data() });
+            transactions.push({ id: doc.id, createdAt:  new Date((doc.createTime.seconds + doc.createTime.nanoseconds/10000000000)*1000),...doc.data() });
         });
         res.status(200).json(transactions);
     } catch (error) {
@@ -34,6 +33,7 @@ const createNewTransaction = async (req, res) => {
     try {
         const data = req.body;
         data.userId = req.user.uid;
+        data.dateCreated = new Date()
         const ref = await db.collection('transactions').add(data);
         res.status(201).json({ id: ref.id, ...data });
     } catch (error) {
@@ -87,8 +87,23 @@ const deleteTransaction = async (req, res) => {
 
 // belum kepikiran gimana caranya
 const getTransactionsByWeek = async (req, res) => {
-   
+    try {
+        const { startOfWeek, endOfWeek } = req.query;
+        const snapshot = await db.collection('transactions')
+            .where('userId', '==', req.user.uid)
+            .where('dateCreated', '>=', new Date(startOfWeek))
+            .where('dateCreated', '<=', new Date(endOfWeek))
+            .get();
+        const transactions = [];
+        snapshot.forEach(doc => {
+            transactions.push({ id: doc.id, ...doc.data() });
+        });
+        res.status(200).json(transactions);
+    } catch (error) {
+        res.status(500).json({ message: error.message });
+    }
 };
+
 
 module.exports = {
     getAllTransaction,
