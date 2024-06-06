@@ -17,6 +17,6 @@ router.get('/single', verifyToken, getSingleTransaction);
 router.post('/', verifyToken, createNewTransaction);
 router.put('/edit', verifyToken, editTransaction);
 router.delete('/delete', verifyToken, deleteTransaction);
-router.post('/week', verifyToken, getTransactionsByWeek);
+router.get('/week', verifyToken, getTransactionsByWeek);
 
 module.exports = router;
