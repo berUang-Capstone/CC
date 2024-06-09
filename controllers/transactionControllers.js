@@ -35,8 +35,21 @@ const createNewTransaction = async (req, res) => {
         data.userId = req.user.uid;
         data.dateCreated = new Date()
         const ref = await db.collection('transactions').add(data);
-        res.status(201).json({ id: ref.id, ...data });
+        
+        // Update user balance
+        const userRef = db.collection('users').doc(req.user.uid);
+        const userDoc = await userRef.get();
+        let balance = userDoc.data().balance || 0;
 
+        if (data.type === 'income') {
+            balance += data.amount;
+        } else if (data.type === 'expense') {
+            balance -= data.amount;
+        }
+
+        await userRef.update({ balance });
+
+        res.status(201).json({ id: ref.id, ...data });
     } catch (error) {
         res.status(500).json({ message: error.message });
     }
@@ -79,6 +92,18 @@ const deleteTransaction = async (req, res) => {
             return res.status(404).json({ message: 'Transaction not found or unauthorized' });
         }
 
+        const userRef = db.collection('users').doc(req.user.uid);
+        const userDoc = await userRef.get();
+        let balance = userDoc.data().balance || 0;
+
+        if (doc.data().type === 'income') {
+            balance -= doc.data().amount;
+        } else if (doc.data().type === 'expense') {
+            balance += doc.data().amount;
+        }
+
+        await userRef.update({ balance });
+
         await ref.delete();
         res.status(200).json({ message: 'Transaction deleted successfully' });
     } catch (error) {
@@ -101,10 +126,23 @@ const getTransactionsByWeek = async (req, res) => {
         });
         res.status(200).json(transactions);
     } catch (error) {
-        res.status(500).json({ message: error.message });
+        res.status(500).json({ message: error.message });   
     }
 };
 
+const getBalance = async (req, res) => {
+    try {
+        const userRef = db.collection('users').doc(req.user.uid);
+        const userDoc = await userRef.get();
+        if (!userDoc.exists) {
+            return res.status(404).json({ message: 'User not found' });
+        }
+        const balance = userDoc.data().balance || 0;
+        res.status(200).json({ balance });
+    } catch (error) {
+        res.status(500).json({ message: error.message });
+    }
+};  
 
 module.exports = {
     getAllTransaction,
@@ -112,5 +150,6 @@ module.exports = {
     createNewTransaction,
     editTransaction,
     deleteTransaction,
-    getTransactionsByWeek
+    getTransactionsByWeek,
+    getBalance
 };
