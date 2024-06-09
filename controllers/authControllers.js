@@ -5,6 +5,8 @@ const { createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut} = r
 
 const register = async (req, res) => {
   const { email, password, displayName } = req.body
+  // set default user balance to 0
+  const balance = 0;
   console.log(email, password, displayName)
 
   try {
@@ -20,6 +22,7 @@ const register = async (req, res) => {
     await db.collection('users').doc(userRecord.uid).set({
       email,
       displayName,
+      balance
     })
 
     res
