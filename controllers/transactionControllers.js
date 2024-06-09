@@ -36,6 +36,7 @@ const createNewTransaction = async (req, res) => {
         data.dateCreated = new Date()
         const ref = await db.collection('transactions').add(data);
         res.status(201).json({ id: ref.id, ...data });
+
     } catch (error) {
         res.status(500).json({ message: error.message });
     }
