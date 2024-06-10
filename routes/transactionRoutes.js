@@ -1,5 +1,5 @@
 const express = require('express');
-const { verifyToken } = require('../middleware/authMiddleware');
+const { verifyIsLoggedIn } = require('../middleware/authMiddleware');
 
 const {
   getAllTransaction,
@@ -7,18 +7,16 @@ const {
   createNewTransaction,
   editTransaction,
   deleteTransaction,
-  getTransactionsByWeek,
-  getBalance
+  getTransactionsByWeek
 } = require('../controllers/transactionControllers');
 
 const router = express.Router();
 
-router.get('/', verifyToken, getAllTransaction);
-router.get('/single', verifyToken, getSingleTransaction);
-router.post('/', verifyToken, createNewTransaction);
-router.put('/edit', verifyToken, editTransaction);
-router.delete('/delete', verifyToken, deleteTransaction);
-router.get('/week', verifyToken, getTransactionsByWeek);
-router.get('/balance', verifyToken, getBalance);
+router.get('/', verifyIsLoggedIn, getAllTransaction);
+router.get('/single', verifyIsLoggedIn, getSingleTransaction);
+router.post('/', verifyIsLoggedIn, createNewTransaction);
+router.put('/edit', verifyIsLoggedIn, editTransaction);
+router.delete('/delete', verifyIsLoggedIn, deleteTransaction);
+router.get('/week', verifyIsLoggedIn, getTransactionsByWeek);
 
 module.exports = router;
