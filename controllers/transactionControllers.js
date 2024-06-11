@@ -33,10 +33,6 @@ const getAllTransaction = async (req, res) => {
   }
 };
 
-const getSingleTransaction = async (req, res) => {
-  res.status(200).json({ message: "get single transaction api" });
-};
-
 const createNewTransaction = async (req, res) => {
   try {
     const userUid = req.userUid;
@@ -72,6 +68,77 @@ const createNewTransaction = async (req, res) => {
   }
 };
 
+const getSingleTransaction = async (req, res) => {
+  res.status(200).json({ message: "get single transaction api" });
+};
+
+const getTransactionByType = async (req,res) => {
+  try {
+    const userUid = req.userUid;
+    const { type } = req.body;
+
+    const transactionsRef = collection(db, 'transactions');
+    const q = query(transactionsRef, where('userId', '==', userUid), where('type', '==', type));
+    const querySnapshot = await getDocs(q);
+
+    const transactions = [];
+    querySnapshot.forEach(doc => {
+        transactions.push({ id: doc.id, ...doc.data() });
+    });
+
+    res.status(200).json(transactions);
+} catch (error) {
+    console.error('Error getting transactions by type:', error);
+    res.status(500).json({ error: 'Failed to get transactions by type' });
+}
+}
+
+const getTransactionByCategory = async (req,res) => {
+  try {
+    const userUid = req.userUid;
+    const { category } = req.body;
+
+    const transactionsRef = collection(db, 'transactions');
+    const q = query(transactionsRef, where('userId', '==', userUid), where('category', '==', category));
+    const querySnapshot = await getDocs(q);
+
+    const transactions = [];
+    querySnapshot.forEach(doc => {
+        transactions.push({ id: doc.id, ...doc.data() });
+    });
+
+    res.status(200).json(transactions);
+} catch (error) {
+    console.error('Error getting transactions by category:', error);
+    res.status(500).json({ error: 'Failed to get transactions by category' });
+}
+}
+
+const getTransactionByDate = async (req,res) => {
+  try {
+    const userUid = req.userUid;
+    const { startDate, endDate } = req.body;
+
+    const transactionsRef = collection(db, 'transactions');
+    const q = query(transactionsRef, 
+        where('userId', '==', userUid), 
+        where('createdAt', '>=', new Date(startDate).toISOString()),
+        where('createdAt', '<=', new Date(endDate).toISOString())
+    );
+    const querySnapshot = await getDocs(q);
+
+    const transactions = [];
+    querySnapshot.forEach(doc => {
+        transactions.push({ id: doc.id, ...doc.data() });
+    });
+
+    res.status(200).json(transactions);
+} catch (error) {
+    console.error('Error getting transactions by date:', error);
+    res.status(500).json({ error: 'Failed to get transactions by date' });
+}
+}
+
 const editTransaction = async (req, res) => {
   res.status(200).json({ message: "edit transaction api" });
 };
@@ -80,15 +147,13 @@ const deleteTransaction = async (req, res) => {
   res.status(200).json({ message: "delete transaction api" });
 };
 
-const getTransactionsByWeek = async (req, res) => {
-  res.status(200).json({ message: "get by week transaction api" });
-};
-
 module.exports = {
   getAllTransaction,
   getSingleTransaction,
   createNewTransaction,
+  getTransactionByType,
+  getTransactionByCategory,
+  getTransactionByDate,
   editTransaction,
   deleteTransaction,
-  getTransactionsByWeek,
 };
