@@ -10,7 +10,6 @@ const {
   getDocs,
 } = require("firebase/firestore");
 const axios = require("axios");
-const fs = require("fs");
 const FormData = require("form-data");
 
 const getAllTransaction = async (req, res) => {
@@ -78,17 +77,27 @@ const createNewTransactionWithOcr = async (req, res) => {
     const userUid = req.userUid;
     const file = req.file;
 
+
     if (!file) {
       return res.status(400).json({ error: "No file uploaded" });
     }
 
+    const imageBlob = await axios.get(file.path , {
+      responseType: 'arraybuffer',
+    });
+
     const formData = new FormData();
-    formData.append("file", fs.createReadStream(file.path));
+    formData.append("file", imageBlob.data, { filename: file.filename });
+
 
     const ocrResponse = await axios.post(
       "https://textrecog-jligp2udmq-et.a.run.app/",
       formData,
-      {}
+      {
+        headers: {
+          ...formData.getHeaders(),
+        },
+      }
     );
 
     const items = ocrResponse.data;
@@ -120,18 +129,29 @@ const createNewTransactionWithOcr = async (req, res) => {
         category: categoryClassifierResponse.data.class_predicted,
         createdAt: new Date().toISOString(),
       };
-      
-      transactions.push(transaction)
 
-      // const transactionRef = await addDoc(collection(db, 'transactions'), transaction);
+      const transactionRef = await addDoc(collection(db, 'transactions'), transaction);
 
-      // transactions.push({ id: transactionRef.id, ...transaction });
-      // totalAmount += amount;
+      transactions.push({ id: transactionRef.id, ...transaction });
+
+      const userDocRef = doc(db, "users", userUid);
+      let userData = (await getDoc(userDocRef)).data();
+      if (transaction.type === "Income") {
+        userData.balance += amount;
+      } else if (transaction.type === "Expense") {
+        userData.balance -= amount;
+      }
+
+      await updateDoc(userDocRef, userData);
+
     }
 
     res
       .status(201)
-      .json({ message: "Transaction created successfully", transactions: transactions });
+      .json({
+        message: "Transaction created successfully",
+        transactions: transactions,
+      });
   } catch (error) {
     res
       .status(500)
