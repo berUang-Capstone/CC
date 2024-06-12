@@ -9,9 +9,9 @@ const {
   updateDoc,
   getDocs,
 } = require("firebase/firestore");
-const axios = require('axios');
-const fs = require('fs');
-const FormData = require('form-data');
+const axios = require("axios");
+const fs = require("fs");
+const FormData = require("form-data");
 
 const getAllTransaction = async (req, res) => {
   try {
@@ -75,48 +75,63 @@ const createNewTransaction = async (req, res) => {
 
 const createNewTransactionWithOcr = async (req, res) => {
   try {
-    const userUid = req.userUid; 
+    const userUid = req.userUid;
     const file = req.file;
 
     if (!file) {
-      return res.status(400).json({ error: 'No file uploaded' });
+      return res.status(400).json({ error: "No file uploaded" });
     }
 
     const formData = new FormData();
-    formData.append('file', fs.createReadStream(file.path));
+    formData.append("file", fs.createReadStream(file.path));
 
-    // const ocrResponse = await axios.post('api/predict', formData, {
-    //   headers: {
-    //     ...formData.getHeaders()
-    //   }
-    // });
+    const ocrResponse = await axios.post(
+      "https://textrecog-jligp2udmq-et.a.run.app/",
+      formData,
+      {}
+    );
 
-    // const items = ocrResponse.data;
+    const items = ocrResponse.data;
 
-    // let totalAmount = 0;
-    // const transactions = [];
+    const transactions = [];
 
-    // for (const item of items) {
-    //   const { name, amount } = item;
+    for (const item of items) {
+      const { name, amount } = item;
 
-    //   const transaction = {
-    //     name,
-    //     amount,
-    //     userId: userUid,
-    //     type: "Expense",
-    //     category: 'OCR',
-    //     createdAt: new Date().toISOString(),
-    //   };
+      const body = {
+        text: name,
+      };
 
-    //   const transactionRef = await addDoc(collection(db, 'transactions'), transaction);
+      const categoryClassifierResponse = await axios.post(
+        "https://api-jligp2udmq-et.a.run.app/predict",
+        body,
+        {
+          headers: {
+            "Content-Type": "application/json",
+          },
+        }
+      );
 
-    //   transactions.push({ id: transactionRef.id, ...transaction });
-    //   totalAmount += amount;
-    // }
+      const transaction = {
+        name,
+        amount,
+        userId: userUid,
+        type: "Expense",
+        category: categoryClassifierResponse.data.class_predicted,
+        createdAt: new Date().toISOString(),
+      };
+      
+      transactions.push(transaction)
+
+      // const transactionRef = await addDoc(collection(db, 'transactions'), transaction);
+
+      // transactions.push({ id: transactionRef.id, ...transaction });
+      // totalAmount += amount;
+    }
 
     res
       .status(201)
-      .json({ message: "Transaction created successfully"});
+      .json({ message: "Transaction created successfully", transactions: transactions });
   } catch (error) {
     res
       .status(500)
@@ -146,17 +161,17 @@ const getTransactionByType = async (req, res) => {
     querySnapshot.forEach((doc) => {
       const transaction = { id: doc.id, ...doc.data() };
       transactions.push(transaction);
-      totalAmount += transaction.amount
+      totalAmount += transaction.amount;
     });
 
-    res.status(200).json({total_amount: totalAmount, transactions: transactions});
-  } catch (error) {
     res
-      .status(500)
-      .json({
-        error: "Failed to get transactions by type",
-        message: error.message,
-      });
+      .status(200)
+      .json({ total_amount: totalAmount, transactions: transactions });
+  } catch (error) {
+    res.status(500).json({
+      error: "Failed to get transactions by type",
+      message: error.message,
+    });
   }
 };
 
@@ -181,14 +196,14 @@ const getTransactionByCategory = async (req, res) => {
       totalAmount += transaction.amount;
     });
 
-    res.status(200).json({total_amount: totalAmount, transactions: transactions});
-  } catch (error) {
     res
-      .status(500)
-      .json({
-        error: "Failed to get transactions by category",
-        message: error.message,
-      });
+      .status(200)
+      .json({ total_amount: totalAmount, transactions: transactions });
+  } catch (error) {
+    res.status(500).json({
+      error: "Failed to get transactions by category",
+      message: error.message,
+    });
   }
 };
 
@@ -214,21 +229,21 @@ const getTransactionByDate = async (req, res) => {
     querySnapshot.forEach((doc) => {
       const transaction = { id: doc.id, ...doc.data() };
       transactions.push(transaction);
-      if(transaction.type === "Expense"){
+      if (transaction.type === "Expense") {
         totalAmount -= transaction.amount;
       } else if (transaction.type === "Income") {
         totalAmount += transaction.amount;
       }
     });
 
-    res.status(200).json({total_amount: totalAmount, transactions: transactions});
-  } catch (error) {
     res
-      .status(500)
-      .json({
-        error: "Failed to get transactions by date",
-        message: error.message,
-      });
+      .status(200)
+      .json({ total_amount: totalAmount, transactions: transactions });
+  } catch (error) {
+    res.status(500).json({
+      error: "Failed to get transactions by date",
+      message: error.message,
+    });
   }
 };
 
