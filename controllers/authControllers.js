@@ -39,8 +39,7 @@ const login = async (req,res) => {
       user: { email: user.email, uid: user.uid } 
     });
   } catch (error) {
-    console.error(error.message);
-    res.status(401).send({ error: 'Login failed. Please check your email and password.' });
+    res.status(401).send({ error: 'Login failed. Please check your email and password.', message: error.message });
   }
 }
 
@@ -49,8 +48,7 @@ const logout = async (req, res) => {
     await signOut(auth);
     res.status(200).send({ message: 'Logout successful' });
   } catch (error) {
-    console.error(error.message);
-    res.status(500).send({ error: 'Logout failed. Please try again.' });
+    res.status(500).send({ error: 'Logout failed. Please try again.', message: error.message});
   }
 }
 
