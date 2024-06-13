@@ -28,7 +28,11 @@ const getAllTransaction = async (req, res) => {
     const userDocRef = doc(db, "users", userUid);
     let userData = (await getDoc(userDocRef)).data();
 
-    res.status(200).json({ current_balance: userData.balance, transactions });
+    res.status(200).json({
+      current_balance: userData.balance,
+      total_transactions: transactions.length,
+      transactions: transactions,
+    });
   } catch (error) {
     res
       .status(500)
@@ -60,7 +64,35 @@ const createNewTransaction = async (req, res) => {
       userData.balance -= amount;
     }
 
+    const walletDocRef = doc(db, "wallets", userUid);
+    let walletData = (await getDoc(walletDocRef)).data();
+
+    if (type === "Income") {
+      walletData.balance += amount;
+      walletData.income += amount;
+      if (category === "Salary") {
+        walletData.salary += amount;
+      } else if (category === "Bonus") {
+        walletData.bonus += amount;
+      } else if (category === "Invesment") {
+        walletData.invesment += amount;
+      }
+    } else if (type === "Expense") {
+      walletData.balance -= amount;
+      walletData.expense += amount;
+      if (category === "Food") {
+        walletData.food += amount;
+      } else if (category === "Transportation") {
+        walletData.transportation += amount;
+      } else if (category === "Shopping") {
+        walletData.shopping += amount;
+      } else if (category === "Others") {
+        walletData.others += amount;
+      }
+    }
+
     await updateDoc(userDocRef, userData);
+    await updateDoc(walletDocRef, walletData);
 
     res
       .status(201)
@@ -77,21 +109,19 @@ const createNewTransactionWithOcr = async (req, res) => {
     const userUid = req.userUid;
     const file = req.file;
 
-
     if (!file) {
       return res.status(400).json({ error: "No file uploaded" });
     }
 
-    const imageBlob = await axios.get(file.path , {
-      responseType: 'arraybuffer',
+    const imageBlob = await axios.get(file.path, {
+      responseType: "arraybuffer",
     });
 
     const formData = new FormData();
     formData.append("file", imageBlob.data, { filename: file.filename });
 
-
     const ocrResponse = await axios.post(
-      "https://textrecog-jligp2udmq-et.a.run.app/",
+      "https://textrecog2-jligp2udmq-et.a.run.app/",
       formData,
       {
         headers: {
@@ -112,7 +142,7 @@ const createNewTransactionWithOcr = async (req, res) => {
       };
 
       const categoryClassifierResponse = await axios.post(
-        "https://api-jligp2udmq-et.a.run.app/predict",
+        "https://api2-jligp2udmq-et.a.run.app/predict",
         body,
         {
           headers: {
@@ -126,11 +156,19 @@ const createNewTransactionWithOcr = async (req, res) => {
         amount,
         userId: userUid,
         type: "Expense",
-        category: categoryClassifierResponse.data.class_predicted,
+        category:
+          categoryClassifierResponse.data.class_predicted === "Belanja"
+            ? "Shopping"
+            : categoryClassifierResponse.data.class_predicted === "other"
+            ? "Others"
+            : categoryClassifierResponse.data.class_predicted,
         createdAt: new Date().toISOString(),
       };
 
-      const transactionRef = await addDoc(collection(db, 'transactions'), transaction);
+      const transactionRef = await addDoc(
+        collection(db, "transactions"),
+        transaction
+      );
 
       transactions.push({ id: transactionRef.id, ...transaction });
 
@@ -144,14 +182,44 @@ const createNewTransactionWithOcr = async (req, res) => {
 
       await updateDoc(userDocRef, userData);
 
+      const walletDocRef = doc(db, "wallets", userUid);
+      let walletData = (await getDoc(walletDocRef)).data();
+
+      let type = transaction.type;
+      let category = transaction.category;
+
+      if (type === "Income") {
+        walletData.balance += amount;
+        walletData.income += amount;
+        if (category === "Salary") {
+          walletData.salary += amount;
+        } else if (category === "Bonus") {
+          walletData.bonus += amount;
+        } else if (category === "Invesment") {
+          walletData.invesment += amount;
+        }
+      } else if (type === "Expense") {
+        walletData.balance -= amount;
+        walletData.expense += amount;
+        if (category === "Food") {
+          walletData.food += amount;
+        } else if (category === "Transportation") {
+          walletData.transportation += amount;
+        } else if (category === "Shopping") {
+          walletData.shopping += amount;
+        } else if (category === "Others") {
+          walletData.others += amount;
+        }
+      }
+
+      await updateDoc(walletDocRef, walletData);
     }
 
-    res
-      .status(201)
-      .json({
-        message: "Transaction created successfully",
-        transactions: transactions,
-      });
+    res.status(201).json({
+      message: "Transaction created successfully",
+      total_transactions: transactions.length,
+      transactions: transactions,
+    });
   } catch (error) {
     res
       .status(500)
@@ -184,9 +252,11 @@ const getTransactionByType = async (req, res) => {
       totalAmount += transaction.amount;
     });
 
-    res
-      .status(200)
-      .json({ total_amount: totalAmount, transactions: transactions });
+    res.status(200).json({
+      total_amount: totalAmount,
+      total_transactions: transactions.length,
+      transactions: transactions,
+    });
   } catch (error) {
     res.status(500).json({
       error: "Failed to get transactions by type",
@@ -216,9 +286,11 @@ const getTransactionByCategory = async (req, res) => {
       totalAmount += transaction.amount;
     });
 
-    res
-      .status(200)
-      .json({ total_amount: totalAmount, transactions: transactions });
+    res.status(200).json({
+      total_amount: totalAmount,
+      total_transactions: transactions.length,
+      transactions: transactions,
+    });
   } catch (error) {
     res.status(500).json({
       error: "Failed to get transactions by category",
@@ -256,9 +328,11 @@ const getTransactionByDate = async (req, res) => {
       }
     });
 
-    res
-      .status(200)
-      .json({ total_amount: totalAmount, transactions: transactions });
+    res.status(200).json({
+      total_amount: totalAmount,
+      total_transactions: transactions.length,
+      transactions: transactions,
+    });
   } catch (error) {
     res.status(500).json({
       error: "Failed to get transactions by date",
