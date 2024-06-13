@@ -1,26 +1,12 @@
-copas firebase confignya & service accoutnya di DM wkwkwk
 
-1.npm i
+Before All:
+1. touch "key.json" di root directory project. Minta value di discord ke alif
+2. ganti value di store/firebase.js buat config firebase. Minta value di discord juga
 
-2.npm start run
- 
-test register
-"http://localhost:3000/auth/register
-{
-  "email": "example@example.com",
-  "password": "password123",
-  "displayName": "test"
-}
 
-test login
-http://localhost:3000/auth/login
-{
-  "email": "eexample@example.com",
-  "password": "password123"
-}
+Cara Run
+1. Run "npm install"
+2. Run "npm run dev"
 
-test logout
-http://localhost:3000/auth/logout
-Authorization > type = Bearer Token > copas accessToken > send
-
-pasang nodemon (optional)
+## Important
+- Jangan commit key.json ato firebase.js kalo udah diisi valuenya, nanti git add nya per file aja
