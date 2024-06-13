@@ -16,9 +16,25 @@ const register = async (req, res) => {
       email: email,
       balance: 0
     };
+    const walletData = {
+      balance: 0,
+      expense : 0,
+      income: 0,
+      salary: 0,
+      bonus: 0,
+      invesment: 0,
+      food: 0,
+      transportation: 0,
+      shopping: 0,
+      others: 0,
+    }
 
     const userDocRef = doc(db, "users", user.uid);
     await setDoc(userDocRef, userData);
+
+    const walletDocRef = doc(db, "wallets", user.uid);
+    await setDoc(walletDocRef, walletData)
+
 
     res
     .status(201)

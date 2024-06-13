@@ -1,19 +1,25 @@
-const { auth, db } = require('../store/firebase')
+const { auth, db } = require("../store/firebase");
 
-const { doc, setDoc } = require('firebase/firestore')
+const {
+  doc,
+  getDoc,
+} = require("firebase/firestore");
 
-const getUser = async (req, res) => {
+const getUserWallet = async (req, res) => {
   try {
-    
+    const userUid = req.userUid;
+
+    const walletDocRef = doc(db, "wallets", userUid);
+    let userWalletData = (await getDoc(walletDocRef)).data();
+
     res
-    .status(201)
-    .send({ message: 'Get User Success!'})
+      .status(201)
+      .send({ message: "Get User Wallet Success!", wallet: userWalletData });
   } catch (e) {
-    console.log(e.message)
+    console.log(e.message);
   }
-}
+};
 
 module.exports = {
-  getUser,
-
-}
+  getUserWallet,
+};
