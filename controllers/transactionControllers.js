@@ -1,155 +1,288 @@
-const { db } = require('../firebase/firebaseConfig');
+const { db } = require("../store/firebase");
+const {
+  collection,
+  doc,
+  addDoc,
+  query,
+  where,
+  getDoc,
+  updateDoc,
+  getDocs,
+} = require("firebase/firestore");
+const axios = require("axios");
+const FormData = require("form-data");
 
 const getAllTransaction = async (req, res) => {
-    try {
-        const snapshot = await db.collection('transactions').where('userId', '==', req.user.uid).get();
-        const transactions = [];
-        snapshot.forEach(doc => {
-            transactions.push({ id: doc.id, createdAt:  new Date((doc.createTime.seconds + doc.createTime.nanoseconds/10000000000)*1000),...doc.data() });
-        });
-        res.status(200).json(transactions);
-    } catch (error) {
-        res.status(500).json({ message: error.message });
-    }
+  try {
+    const userUid = req.userUid;
+
+    const transactionsRef = collection(db, "transactions");
+    const q = query(transactionsRef, where("userId", "==", userUid));
+    const querySnapshot = await getDocs(q);
+
+    const transactions = [];
+    querySnapshot.forEach((doc) => {
+      transactions.push({ id: doc.id, ...doc.data() });
+    });
+
+    const userDocRef = doc(db, "users", userUid);
+    let userData = (await getDoc(userDocRef)).data();
+
+    res.status(200).json({ current_balance: userData.balance, transactions });
+  } catch (error) {
+    res
+      .status(500)
+      .json({ error: "Failed to get transactions", message: error.message });
+  }
 };
-
-
-//kalo mau get satu transaction bisa pake http://localhost:3000/api/v1/transaction/single?id=<transactionId>
-const getSingleTransaction = async (req, res) => {
-    try {
-        const transactionId = req.query.id;
-        const doc = await db.collection('transactions').doc(transactionId).get();
-        if (!doc.exists || doc.data().userId !== req.user.uid) {
-            return res.status(404).json({ message: 'Transaction not found or unauthorized' });
-        }
-        res.status(200).json({ id: doc.id, ...doc.data() });
-    } catch (error) {
-        res.status(500).json({ message: error.message });
-    }
-};
-
 
 const createNewTransaction = async (req, res) => {
-    try {
-        const data = req.body;
-        data.userId = req.user.uid;
-        data.dateCreated = new Date()
-        const ref = await db.collection('transactions').add(data);
-        
-        // Update user balance
-        const userRef = db.collection('users').doc(req.user.uid);
-        const userDoc = await userRef.get();
-        let balance = userDoc.data().balance || 0;
+  try {
+    const userUid = req.userUid;
+    const { type, category, amount, name } = req.body;
 
-        if (data.type === 'income') {
-            balance += data.amount;
-        } else if (data.type === 'expense') {
-            balance -= data.amount;
-        }
+    const dateCreated = new Date();
 
-        await userRef.update({ balance });
+    const docRef = await addDoc(collection(db, "transactions"), {
+      type,
+      category,
+      amount,
+      name,
+      createdAt: dateCreated.toISOString(),
+      userId: userUid,
+    });
 
-        res.status(201).json({ id: ref.id, ...data });
-    } catch (error) {
-        res.status(500).json({ message: error.message });
+    const userDocRef = doc(db, "users", userUid);
+    let userData = (await getDoc(userDocRef)).data();
+    if (type === "Income") {
+      userData.balance += amount;
+    } else if (type === "Expense") {
+      userData.balance -= amount;
     }
+
+    await updateDoc(userDocRef, userData);
+
+    res
+      .status(201)
+      .json({ message: "Transaction created successfully", id: docRef.id });
+  } catch (error) {
+    res
+      .status(500)
+      .json({ error: "Failed to create transaction", message: error.message });
+  }
 };
 
-//bisa kalo pake put http://localhost:3000/api/v1/transaction/edit
-//{
-// "id": "c10zVCMhtN7oLjDsOLB8",
-//  "amount": 150000,
-//  "name": "Nasi Goreng Rizki"
-// }
+const createNewTransactionWithOcr = async (req, res) => {
+  try {
+    const userUid = req.userUid;
+    const file = req.file;
+
+
+    if (!file) {
+      return res.status(400).json({ error: "No file uploaded" });
+    }
+
+    const imageBlob = await axios.get(file.path , {
+      responseType: 'arraybuffer',
+    });
+
+    const formData = new FormData();
+    formData.append("file", imageBlob.data, { filename: file.filename });
+
+
+    const ocrResponse = await axios.post(
+      "https://textrecog-jligp2udmq-et.a.run.app/",
+      formData,
+      {
+        headers: {
+          ...formData.getHeaders(),
+        },
+      }
+    );
+
+    const items = ocrResponse.data;
+
+    const transactions = [];
+
+    for (const item of items) {
+      const { name, amount } = item;
+
+      const body = {
+        text: name,
+      };
+
+      const categoryClassifierResponse = await axios.post(
+        "https://api-jligp2udmq-et.a.run.app/predict",
+        body,
+        {
+          headers: {
+            "Content-Type": "application/json",
+          },
+        }
+      );
+
+      const transaction = {
+        name,
+        amount,
+        userId: userUid,
+        type: "Expense",
+        category: categoryClassifierResponse.data.class_predicted,
+        createdAt: new Date().toISOString(),
+      };
+
+      const transactionRef = await addDoc(collection(db, 'transactions'), transaction);
+
+      transactions.push({ id: transactionRef.id, ...transaction });
+
+      const userDocRef = doc(db, "users", userUid);
+      let userData = (await getDoc(userDocRef)).data();
+      if (transaction.type === "Income") {
+        userData.balance += amount;
+      } else if (transaction.type === "Expense") {
+        userData.balance -= amount;
+      }
+
+      await updateDoc(userDocRef, userData);
+
+    }
+
+    res
+      .status(201)
+      .json({
+        message: "Transaction created successfully",
+        transactions: transactions,
+      });
+  } catch (error) {
+    res
+      .status(500)
+      .json({ error: "Failed to create transaction", message: error.message });
+  }
+};
+
+const getSingleTransaction = async (req, res) => {
+  res.status(200).json({ message: "get single transaction api" });
+};
+
+const getTransactionByType = async (req, res) => {
+  try {
+    const userUid = req.userUid;
+    const { type } = req.body;
+
+    const transactionsRef = collection(db, "transactions");
+    const q = query(
+      transactionsRef,
+      where("userId", "==", userUid),
+      where("type", "==", type)
+    );
+    const querySnapshot = await getDocs(q);
+
+    const transactions = [];
+    let totalAmount = 0;
+    querySnapshot.forEach((doc) => {
+      const transaction = { id: doc.id, ...doc.data() };
+      transactions.push(transaction);
+      totalAmount += transaction.amount;
+    });
+
+    res
+      .status(200)
+      .json({ total_amount: totalAmount, transactions: transactions });
+  } catch (error) {
+    res.status(500).json({
+      error: "Failed to get transactions by type",
+      message: error.message,
+    });
+  }
+};
+
+const getTransactionByCategory = async (req, res) => {
+  try {
+    const userUid = req.userUid;
+    const { category } = req.body;
+
+    const transactionsRef = collection(db, "transactions");
+    const q = query(
+      transactionsRef,
+      where("userId", "==", userUid),
+      where("category", "==", category)
+    );
+    const querySnapshot = await getDocs(q);
+
+    const transactions = [];
+    let totalAmount = 0;
+    querySnapshot.forEach((doc) => {
+      const transaction = { id: doc.id, ...doc.data() };
+      transactions.push(transaction);
+      totalAmount += transaction.amount;
+    });
+
+    res
+      .status(200)
+      .json({ total_amount: totalAmount, transactions: transactions });
+  } catch (error) {
+    res.status(500).json({
+      error: "Failed to get transactions by category",
+      message: error.message,
+    });
+  }
+};
+
+const getTransactionByDate = async (req, res) => {
+  try {
+    const userUid = req.userUid;
+    const { startDate, endDate } = req.body;
+
+    const start = new Date(`${startDate}T00:00:00Z`);
+    const end = new Date(`${endDate}T23:59:59Z`);
+
+    const transactionsRef = collection(db, "transactions");
+    const q = query(
+      transactionsRef,
+      where("userId", "==", userUid),
+      where("createdAt", ">=", start.toISOString()),
+      where("createdAt", "<=", end.toISOString())
+    );
+    const querySnapshot = await getDocs(q);
+
+    const transactions = [];
+    let totalAmount = 0;
+    querySnapshot.forEach((doc) => {
+      const transaction = { id: doc.id, ...doc.data() };
+      transactions.push(transaction);
+      if (transaction.type === "Expense") {
+        totalAmount -= transaction.amount;
+      } else if (transaction.type === "Income") {
+        totalAmount += transaction.amount;
+      }
+    });
+
+    res
+      .status(200)
+      .json({ total_amount: totalAmount, transactions: transactions });
+  } catch (error) {
+    res.status(500).json({
+      error: "Failed to get transactions by date",
+      message: error.message,
+    });
+  }
+};
 
 const editTransaction = async (req, res) => {
-    try {
-        const transactionId = req.body.id;
-        const data = req.body;
-        delete data.id;
-        const ref = db.collection('transactions').doc(transactionId);
-
-        const doc = await ref.get();
-        if (!doc.exists || doc.data().userId !== req.user.uid) {
-            return res.status(404).json({ message: 'Transaction not found or unauthorized' });
-        }
-
-        await ref.update(data);
-        res.status(200).json({ message: 'Transaction updated successfully' });
-    } catch (error) {
-        res.status(500).json({ message: error.message });
-    }
+  res.status(200).json({ message: "edit transaction api" });
 };
 
-//bisa diakses kalo pake http://localhost:3000/api/v1/transaction/delete?id=<transactionId>)
 const deleteTransaction = async (req, res) => {
-    try {
-        const transactionId = req.query.id;
-        const ref = db.collection('transactions').doc(transactionId);
-
-        const doc = await ref.get();
-        if (!doc.exists || doc.data().userId !== req.user.uid) {
-            return res.status(404).json({ message: 'Transaction not found or unauthorized' });
-        }
-
-        const userRef = db.collection('users').doc(req.user.uid);
-        const userDoc = await userRef.get();
-        let balance = userDoc.data().balance || 0;
-
-        if (doc.data().type === 'income') {
-            balance -= doc.data().amount;
-        } else if (doc.data().type === 'expense') {
-            balance += doc.data().amount;
-        }
-
-        await userRef.update({ balance });
-
-        await ref.delete();
-        res.status(200).json({ message: 'Transaction deleted successfully' });
-    } catch (error) {
-        res.status(500).json({ message: error.message });
-    }
+  res.status(200).json({ message: "delete transaction api" });
 };
-
-// belum kepikiran gimana caranya
-const getTransactionsByWeek = async (req, res) => {
-    try {
-        const { startOfWeek, endOfWeek } = req.query;
-        const snapshot = await db.collection('transactions')
-            .where('userId', '==', req.user.uid)
-            .where('dateCreated', '>=', new Date(startOfWeek))
-            .where('dateCreated', '<=', new Date(endOfWeek))
-            .get();
-        const transactions = [];
-        snapshot.forEach(doc => {
-            transactions.push({ id: doc.id, ...doc.data() });
-        });
-        res.status(200).json(transactions);
-    } catch (error) {
-        res.status(500).json({ message: error.message });   
-    }
-};
-
-const getBalance = async (req, res) => {
-    try {
-        const userRef = db.collection('users').doc(req.user.uid);
-        const userDoc = await userRef.get();
-        if (!userDoc.exists) {
-            return res.status(404).json({ message: 'User not found' });
-        }
-        const balance = userDoc.data().balance || 0;
-        res.status(200).json({ balance });
-    } catch (error) {
-        res.status(500).json({ message: error.message });
-    }
-};  
 
 module.exports = {
-    getAllTransaction,
-    getSingleTransaction,
-    createNewTransaction,
-    editTransaction,
-    deleteTransaction,
-    getTransactionsByWeek,
-    getBalance
+  getAllTransaction,
+  getSingleTransaction,
+  createNewTransaction,
+  createNewTransactionWithOcr,
+  getTransactionByType,
+  getTransactionByCategory,
+  getTransactionByDate,
+  editTransaction,
+  deleteTransaction,
 };
