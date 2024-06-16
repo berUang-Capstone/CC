@@ -161,7 +161,8 @@ const createNewTransactionWithOcr = async (req, res) => {
             ? "Shopping"
             : categoryClassifierResponse.data.class_predicted === "other"
             ? "Others"
-            : categoryClassifierResponse.data.class_predicted,
+            : categoryClassifierResponse.data.class_predicted === "Transportasi"
+            ? "Transportation" : categoryClassifierResponse.data.class_predicted,
         createdAt: new Date().toISOString(),
       };
 
