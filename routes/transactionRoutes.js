@@ -53,7 +53,7 @@ router.get("/single", verifyIsLoggedIn, getSingleTransaction);
 router.post("/type", verifyIsLoggedIn, getTransactionByType);
 router.post("/category", verifyIsLoggedIn, getTransactionByCategory);
 router.post("/date", verifyIsLoggedIn, getTransactionByDate);
-router.put("/edit", verifyIsLoggedIn, editTransaction);
-router.delete("/delete", verifyIsLoggedIn, deleteTransaction);
+router.put("/edit/:trxId", verifyIsLoggedIn, editTransaction);
+router.delete("/delete/:trxId", verifyIsLoggedIn, deleteTransaction);
 
 module.exports = router;

@@ -343,13 +343,198 @@ const getTransactionByDate = async (req, res) => {
 };
 
 const editTransaction = async (req, res) => {
-  res.status(200).json({ message: "edit transaction api" });
+  try {
+    const userUid = req.userUid;
+    const { trxId } = req.params;
+    const { category, amount, name } = req.body;
+
+    // Transaction
+    const trxDocRef = doc(db, "transactions", trxId);
+    let trxData = (await getDoc(trxDocRef)).data();
+    console.log(trxData)
+
+    if (trxData.userId != userUid) {
+      res
+      .status(500)
+      .json({ error: "Failed to update transaction", message: "You are not allowed to update this transaction" });
+
+      return
+    }
+
+    let amountDiff = trxData.amount - amount
+
+    // User
+    const userDocRef = doc(db, "users", userUid);
+    let userData = (await getDoc(userDocRef)).data();
+    if (trxData.type === "Income") {
+      userData.balance -= amountDiff;
+    } else if (type === "Expense") {
+      userData.balance += amountDiff;
+    }
+
+    // Wallet
+    const walletDocRef = doc(db, "wallets", userUid);
+    let walletData = (await getDoc(walletDocRef)).data();
+
+    if (trxData.type === "Income") {
+      walletData.balance -= amountDiff
+      walletData.income -= amountDiff
+
+      if (trxData.category == category) {
+        if (category === "Salary") {
+          walletData.salary -= amountDiff;
+        } else if (category === "Bonus") {
+          walletData.bonus -= amountDiff;
+        } else if (category === "Invesment") {
+          walletData.invesment -= amountDiff;
+        }
+      } 
+      else {
+        if (trxData.category === "Salary") {
+          walletData.salary -= trxData.amount;
+        } else if (trxData.category === "Bonus") {
+          walletData.bonus -= trxData.amount;
+        } else if (trxData.category === "Invesment") {
+          walletData.invesment -= trxData.amount;
+        }
+
+        if (category === "Salary") {
+          walletData.salary += amount;
+        } else if (category === "Bonus") {
+          walletData.bonus += amount;
+        } else if (category === "Invesment") {
+          walletData.invesment += amount;
+        }
+      }
+    } else if (trxData.type === "Expense") {
+      walletData.balance += amountDiff;
+      walletData.expense -= amountDiff;
+
+      if (trxData.category == category) {
+        if (category === "Food") {
+          walletData.food -= amountDiff;
+        } else if (category === "Transportation") {
+          walletData.transportation -= amountDiff;
+        } else if (category === "Shopping") {
+          walletData.shopping -= amountDiff;
+        } else if (category === "Others") {
+          walletData.others -= amountDiff;
+        }
+      }
+      else {
+        if (trxData.category === "Food") {
+          walletData.food -= trxData.amount;
+        } else if (trxData.category === "Transportation") {
+          walletData.transportation -= trxData.amount;
+        } else if (trxData.category === "Shopping") {
+          walletData.shopping -= trxData.amount;
+        } else if (trxData.category === "Others") {
+          walletData.others -= trxData.amount;
+        }
+
+        if (category === "Food") {
+          walletData.food += amount;
+        } else if (category === "Transportation") {
+          walletData.transportation += amount;
+        } else if (category === "Shopping") {
+          walletData.shopping += amount;
+        } else if (category === "Others") {
+          walletData.others += amount;
+        }
+      }
+    }
+
+    trxData.category = category
+    trxData.amount = amount
+    trxData.name = name
+
+    await updateDoc(trxDocRef, trxData);
+    await updateDoc(userDocRef, userData);
+    await updateDoc(walletDocRef, walletData);
+
+    res
+      .status(200)
+      .json({ message: "Transaction updated successfully", id: trxId });
+  } catch (error) {
+    res
+      .status(500)
+      .json({ error: "Failed to update transaction", message: error.message });
+  }
+
+  // res.status(200).json({ message: "edit transaction api" });
 };
 
 const deleteTransaction = async (req, res) => {
-  res.status(200).json({ message: "delete transaction api" });
-};
+  try {
+    const userUid = req.userUid;
+    const { trxId } = req.params;
 
+    // Transaction
+    const trxDocRef = doc(db, "transactions", trxId);
+    let trxData = (await getDoc(trxDocRef)).data();
+
+    if (trxData.userId != userUid) {
+      res
+      .status(500)
+      .json({ error: "Failed to delete transaction", message: "You are not allowed to delete this transaction" });
+
+      return
+    }
+
+    // User
+    const userDocRef = doc(db, "users", userUid);
+    let userData = (await getDoc(userDocRef)).data();
+    if (trxData.type === "Income") {
+      userData.balance -= trxData.amount;
+    } else if (type === "Expense") {
+      userData.balance += trxData.amount;
+    }
+
+    // Wallet
+    const walletDocRef = doc(db, "wallets", userUid);
+    let walletData = (await getDoc(walletDocRef)).data();
+
+    if (trxData.type === "Income") {
+      walletData.balance -= trxData.amount
+      walletData.income -= trxData.amount
+
+      if (trxData.category === "Salary") {
+        walletData.salary -= trxData.amount;
+      } else if (trxData.category === "Bonus") {
+        walletData.bonus -= trxData.amount;
+      } else if (trxData.category === "Invesment") {
+        walletData.invesment -= trxData.amount;
+      }
+    } else if (trxData.type === "Expense") {
+      walletData.balance += trxData.amount;
+      walletData.expense -= trxData.amount;
+
+      if (trxData.category === "Food") {
+        walletData.food -= trxData.amount;
+      } else if (trxData.category === "Transportation") {
+        walletData.transportation -= trxData.amount;
+      } else if (trxData.category === "Shopping") {
+        walletData.shopping -= trxData.amount;
+      } else if (trxData.category === "Others") {
+        walletData.others -= trxData.amount;
+      }
+    }
+
+    await updateDoc(userDocRef, userData);
+    await updateDoc(walletDocRef, walletData);
+    await deleteDoc(trxDocRef)
+
+    res
+      .status(200)
+      .json({ message: "Transaction deleted successfully", id: trxId });
+  } catch (error) {
+    res
+      .status(500)
+      .json({ error: "Failed to delete transaction", message: error.message });
+  }
+
+  // res.status(200).json({ message: "delete transaction api" });
+};
 module.exports = {
   getAllTransaction,
   getSingleTransaction,
