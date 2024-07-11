@@ -32,10 +32,10 @@ ganti value di store/firebase.js buat config firebase. Minta value di discord ju
 Cara Run
 
 ```bash
-  npm run deploy
+npm run deploy
 ```
 ```bash
- Run "npm run dev"
+Run "npm run dev"
 ```
 
 Run "npm run dev
