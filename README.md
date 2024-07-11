@@ -54,7 +54,7 @@ Jangan commit key.json ato firebase.js kalo udah diisi valuenya, nanti git add n
 
 ![Untitled (2)](https://github.com/berUang-Capstone/CC/assets/92311039/d5b395dd-4c91-437b-8b6a-211befb5a51e)
 
-
+Penulisan dokumentasi arsitektur sangat penting untuk memperkenalkan alur kerja sistem yang digunakan dalam lingkungan cloud. Gambar 3.8 menunjukkan bahwa bentuk arsitektur disertakan dalam dokumentasi, lengkap dengan penjelasan dan alasan pemilihan layanan tertentu yang digunakan dalam arsitektur cloud tersebut.
 
 
 ## berUang ERD
