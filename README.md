@@ -54,7 +54,11 @@ Jangan commit key.json ato firebase.js kalo udah diisi valuenya, nanti git add n
 
 ![Untitled (2)](https://github.com/berUang-Capstone/CC/assets/92311039/d5b395dd-4c91-437b-8b6a-211befb5a51e)
 
-Penulisan dokumentasi arsitektur sangat penting untuk memperkenalkan alur kerja sistem yang digunakan dalam lingkungan cloud. Gambar 3.8 menunjukkan bahwa bentuk arsitektur disertakan dalam dokumentasi, lengkap dengan penjelasan dan alasan pemilihan layanan tertentu yang digunakan dalam arsitektur cloud tersebut.
+
+Pada Gambar 3.1, terlihat ilustrasi desain arsitektur Google Cloud yang menggunakan beberapa layanan serverless untuk tahap pengembangan. Pengguna mengakses aplikasi melalui perangkat mereka, seperti smartphone atau komputer. Autentikasi pengguna dilakukan menggunakan Firebase Authentication, yang memastikan bahwa hanya pengguna terverifikasi yang dapat mengakses aplikasi.
+API REST dikembangkan menggunakan Node.js dan Express.js, dan berfungsi sebagai penghubung antara pengguna dan layanan backend. API ini dideploy menggunakan Cloud Run, yang memungkinkan API untuk dijalankan secara serverless. Penyimpanan cloud menggunakan Cloud Storage digunakan untuk menyimpan berbagai data yang dibutuhkan oleh aplikasi, seperti file gambar, video, atau dokumen lainnya.Untuk penyimpanan data aplikasi secara efisien, digunakan Cloud Firestore, sebuah basis data NoSQL yang memungkinkan query real-time dan menawarkan skalabilitas serta fleksibilitas dalam penyimpanan data. 
+Model klasifikasi kategori dikembangkan menggunakan framework Flask dan dijalankan dalam container Docker. Model ini kemudian dideploy menggunakan Cloud Run, yang memungkinkan model berjalan secara serverless dan skalabel.Selain itu, model OCR (Optical Character Recognition) juga dikembangkan menggunakan framework Flask dan dijalankan dalam container Docker. Model ini juga dideploy menggunakan Cloud Run, yang memungkinkan pengenalan teks dari gambar atau dokumen secara otomatis. Desain arsitektur ini memanfaatkan kekuatan Google Cloud dalam menyediakan layanan serverless yang efisien dan skalabel. 
+
 
 
 ## berUang ERD
