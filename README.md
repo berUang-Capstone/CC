@@ -23,8 +23,7 @@ Team ID : C241-PS377
 
 (MD) A005D4KX4246 – Nasywa Tsuraya – Universitas Bina Nusantara 
 
-## How To Run Code In Local
-
+## How To Run Code
 Before All:
 
 touch "key.json" di root directory project. Minta value di discord ke alif
