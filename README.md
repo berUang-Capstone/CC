@@ -46,7 +46,6 @@ Jangan commit key.json ato firebase.js kalo udah diisi valuenya, nanti git add n
 10-MIN VIDEO PRESENTATION LINK:
 (https://youtu.be/KDhNTU4KmYs)
 
-SLIDE PRESENTATION LINK: (https://www.canva.com/design/DAGIfShjzY4/altxxJUL43VICmyCKKWBVA/view?utm_content=DAGIfShjzY4&utm_campaign=designshare&utm_medium=link&utm_source=viewer)
 
 
 
