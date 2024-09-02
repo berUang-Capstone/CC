@@ -1,9 +1,9 @@
 
 # berUang Cloud Computing Path
 
-BerUang is designed to address financial challenges faced by the younger generation, including impulsive spending and inadequate budgeting skills. Our aim is to enhance financial literacy through an intuitive expense-tracking app tailored for Gen Z's digital habits. By integrating artificial intelligence, BerUang offers personalized saving and spending recommendations. The app features OCR technology for effortless expense tracking via receipt photo scanning. We are planning to provide food suggestions based on user preferences and budget for our future updates.
+BerUang dirancang untuk mengatasi tantangan finansial yang dihadapi oleh generasi muda, termasuk perilaku belanja impulsif dan kurangnya keterampilan dalam membuat anggaran. Tujuan kami adalah meningkatkan literasi keuangan melalui aplikasi pelacak pengeluaran yang intuitif, disesuaikan dengan kebiasaan digital Gen Z. Dengan integrasi kecerdasan buatan, BerUang memberikan rekomendasi pribadi untuk menabung dan mengatur pengeluaran. Aplikasi ini juga dilengkapi teknologi OCR untuk melacak pengeluaran secara mudah dengan memindai foto struk. Kami berencana untuk menambahkan fitur rekomendasi makanan berdasarkan preferensi pengguna dan anggaran dalam pembaruan mendatang.
 
-Cloud Computing: API endpoints were deployed using Google Cloud Run to ensure scalability and reliability. The backend was built using Express.js and Flask, providing a robust and efficient server-side framework. MQTT was implemented for communication between the app and the backend, facilitating real-time data exchange. Additionally, a dashboard was created for monitoring service availability, logging activities ensuring the smooth operation of the BerUang platform.
+Cloud Computing dan Backend: API endpoint kami di-deploy menggunakan Google Cloud Run untuk memastikan skalabilitas dan keandalan. Backend dibangun dengan menggunakan Express.js dan Flask, memberikan kerangka server-side yang kokoh dan efisien. Kami menerapkan MQTT untuk komunikasi antara aplikasi dan backend, sehingga memungkinkan pertukaran data secara real-time. Selain itu, sebuah dashboard telah dibuat untuk memantau ketersediaan layanan, mencatat aktivitas, serta memastikan operasi platform BerUang berjalan dengan lancar.
 
 ## OUR TEAM
 Team ID : C241-PS377 
